@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="com.mituuz.fuzzier.FuzzierSettings">
+    <option name="modules">
+      <map>
+        <entry key="Kata" value="$PROJECT_DIR$" />
+      </map>
+    </option>
+    <option name="recentFiles">
+      <list>
+        <FileAccessData>
+          <option name="accessCount" value="17" />
+          <option name="filePath" value="/src/parser.h" />
+        </FileAccessData>
+        <FileAccessData>
+          <option name="accessCount" value="10" />
+          <option name="filePath" value="/src/sugar.h" />
+        </FileAccessData>
+        <FileAccessData>
+          <option name="accessCount" value="7" />
+          <option name="filePath" value="/src/tokenizer.h" />
+        </FileAccessData>
+        <FileAccessData>
+          <option name="accessCount" value="6" />
+          <option name="filePath" value="/src/generation.h" />
+        </FileAccessData>
+        <FileAccessData>
+          <option name="accessCount" value="2" />
+          <option name="filePath" value="/src/arena.h" />
+        </FileAccessData>
+        <FileAccessData>
+          <option name="accessCount" value="3" />
+          <option name="filePath" value="/src/main.cpp" />
+        </FileAccessData>
+      </list>
+    </option>
+    <option name="recentlySearchedFiles" value="rO0ABXNyABNqYXZhLnV0aWwuQXJyYXlMaXN0eIHSHZnHYZ0DAAFJAARzaXpleHAAAAAGdwQAAAAGc3IASGNvbS5taXR1dXouZnV6emllci5lbnRpdGllcy5GdXp6eU1hdGNoQ29udGFpbmVyJFNlcmlhbGl6ZWRNYXRjaENvbnRhaW5lctkvLD+bp8u+AgAETAAIZmlsZVBhdGh0ABJMamF2YS9sYW5nL1N0cmluZztMAAhmaWxlbmFtZXEAfgADTAAObW9kdWxlQmFzZVBhdGhxAH4AA0wABXNjb3JldAA8TGNvbS9taXR1dXovZnV6emllci9lbnRpdGllcy9GdXp6eU1hdGNoQ29udGFpbmVyJEZ1enp5U2NvcmU7eHB0AA0vc3JjL21haW4uY3BwdAAIbWFpbi5jcHB0ABgvaG9tZS9taWthbi9EZXNrdG9wL0thdGFzcgA6Y29tLm1pdHV1ei5mdXp6aWVyLmVudGl0aWVzLkZ1enp5TWF0Y2hDb250YWluZXIkRnV6enlTY29yZXtDWSpDzcWJAgAHSQANZmlsZW5hbWVTY29yZUkADmZyZXF1ZW5jeVNjb3JlSQAPbXVsdGlNYXRjaFNjb3JlSQAQcGFydGlhbFBhdGhTY29yZUkADHJlY2VuY3lTY29yZUkAC3N0cmVha1Njb3JlTAATaGlnaGxpZ2h0Q2hhcmFjdGVyc3QAD0xqYXZhL3V0aWwvU2V0O3hwAAAABAAAAAAAAAAAAAAACgAAAAkAAAAEc3IAEWphdmEudXRpbC5IYXNoU2V0ukSFlZa4tzQDAAB4cHcMAAAAED9AAAAAAAAEc3IAEWphdmEubGFuZy5JbnRlZ2VyEuKgpPeBhzgCAAFJAAV2YWx1ZXhyABBqYXZhLmxhbmcuTnVtYmVyhqyVHQuU4IsCAAB4cAAAAABzcQB+AA4AAAABc3EAfgAOAAAAAnNxAH4ADgAAAAN4c3EAfgACdAAML3NyYy9hcmVuYS5odAAHYXJlbmEuaHQAGC9ob21lL21pa2FuL0Rlc2t0b3AvS2F0YXNxAH4ACQAAAAUAAAAAAAAAAAAAAAoAAAAKAAAABXNxAH4ADHcMAAAAED9AAAAAAAAFcQB+ABBxAH4AEXEAfgAScQB+ABNzcQB+AA4AAAAEeHNxAH4AAnQAES9zcmMvZ2VuZXJhdGlvbi5odAAMZ2VuZXJhdGlvbi5odAAYL2hvbWUvbWlrYW4vRGVza3RvcC9LYXRhc3EAfgAJAAAABQAAAAEAAAAAAAAAAAAAAAgAAAAFc3EAfgAMdwwAAAAQP0AAAAAAAAVxAH4AEHEAfgARcQB+ABJxAH4AE3EAfgAaeHNxAH4AAnQAEC9zcmMvdG9rZW5pemVyLmh0AAt0b2tlbml6ZXIuaHQAGC9ob21lL21pa2FuL0Rlc2t0b3AvS2F0YXNxAH4ACQAAAAQAAAABAAAAAAAAAAAAAAAJAAAABHNxAH4ADHcMAAAAED9AAAAAAAAEcQB+ABBxAH4AEXEAfgAScQB+ABN4c3EAfgACdAAML3NyYy9zdWdhci5odAAHc3VnYXIuaHQAGC9ob21lL21pa2FuL0Rlc2t0b3AvS2F0YXNxAH4ACQAAAAQAAAABAAAAAAAAAAAAAAAJAAAAA3NxAH4ADHcMAAAAED9AAAAAAAAEcQB+ABBxAH4AEXEAfgAScQB+ABN4c3EAfgACdAANL3NyYy9wYXJzZXIuaHQACHBhcnNlci5odAAYL2hvbWUvbWlrYW4vRGVza3RvcC9LYXRhc3EAfgAJAAAAAwAAAAMAAAAAAAAAAAAAAAoAAAADc3EAfgAMdwwAAAAQP0AAAAAAAANxAH4AEHEAfgARcQB+ABJ4eA==" />
+  </component>
+</project>
