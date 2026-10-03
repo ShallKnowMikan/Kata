@@ -12,18 +12,22 @@ enum class TokenType {
     IDENT,
     LET,
     EQUALS,
-    SUM,
+    PLUS,
+    MINUS,
     PRODUCT,
     DIVISION,
     POWER,
+    UNARY_MINUS,
 };
 
 
 inline HashMap<TokenType,int> BIN_EXPR_TOKEN_PRIO = {
-    {TokenType::SUM, 0},
+    {TokenType::PLUS, 0},
+    {TokenType::MINUS, 0},
     {TokenType::DIVISION, 1},
     {TokenType::PRODUCT, 1},
     {TokenType::POWER, 2},
+    {TokenType::UNARY_MINUS, 3},
 };
 
 inline std::string tokenTypeToString(const TokenType type) {
@@ -33,20 +37,22 @@ inline std::string tokenTypeToString(const TokenType type) {
         case TokenType::SEMI: return "SEMI";
         case TokenType::OPEN_PAREN: return "OPEN_PAREN";
         case TokenType::CLOSED_PAREN: return "CLOSED_PAREN";
-        case TokenType::SUM: return "SUM";
+        case TokenType::PLUS: return "SUM";
+        case TokenType::MINUS: return "SUB";
         case TokenType::IDENT: return "IDENT";
         case TokenType::LET: return "LET";
         case TokenType::EQUALS: return "EQUALS";
         case TokenType::PRODUCT: return "PRODUCT";
         case TokenType::DIVISION: return "DIVISION";
         case TokenType::POWER: return "POWER";
+        case TokenType::UNARY_MINUS: return "UNARY_MINUS";
     };
     return "INVALID TYPE";
 }
 
 struct Token {
     TokenType type;
-    std::optional<std::string> value {};
+    Opt<String> value {};
 };
 
 class Tokenizer {
@@ -110,7 +116,24 @@ public:
                 continue;
             } else if (peek().value() == '+') {
                 consume();
-                tokens.push_back({.type = TokenType::SUM});
+                tokens.push_back({.type = TokenType::PLUS});
+                continue;
+            } else if (peek().value() == '-') {
+                consume();
+                tokens.push_back({.type = TokenType::MINUS});
+                continue;
+            } else if (peek().value() == '*' && peek(1).has_value() && peek(1).value() == '*') {
+                consume();
+                consume();
+                tokens.push_back({.type = TokenType::POWER});
+                continue;
+            } else if (peek().value() == '*') {
+                consume();
+                tokens.push_back({.type = TokenType::PRODUCT});
+                continue;
+            } else if (peek().value() == '/') {
+                consume();
+                tokens.push_back({.type = TokenType::DIVISION});
                 continue;
             } else if (peek().value() == '=') {
                 consume();

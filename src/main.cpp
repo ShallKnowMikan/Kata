@@ -47,6 +47,7 @@ int main(int argc, char* argv[]) {
 		system(cmd.str().c_str());
 	}
 
+	// let y = 3 / 2 * (4 + 4 + 8) / 4 ** 2;
 
 
 	return 0;

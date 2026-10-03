@@ -15,24 +15,44 @@ struct NodeExprIntLit {
     Token intLit;
 };
 
-struct BinExpr;
+struct NodeBinExpr;
 
+struct NodeNegateExpr;
 struct NodeExpr {
-    Variant<NodeExprIdent*,NodeExprIntLit*,BinExpr*> var;
+    Variant<NodeExprIdent*,NodeExprIntLit*,NodeBinExpr*,NodeNegateExpr*> var;
 };
 
-struct SumExpr {
+struct NodePowerExpr {
     NodeExpr* left;
     NodeExpr* right;
 };
 
-struct ProdExpr {
+struct NodeIntDivExpr {
     NodeExpr* left;
     NodeExpr* right;
 };
 
-struct BinExpr {
-    Variant<SumExpr*,ProdExpr*> variant;
+struct NodeSumExpr {
+    NodeExpr* left;
+    NodeExpr* right;
+};
+
+struct NodeSubExpr {
+    NodeExpr* left;
+    NodeExpr* right;
+};
+
+struct NodeProdExpr {
+    NodeExpr* left;
+    NodeExpr* right;
+};
+
+struct NodeNegateExpr {
+    NodeExpr* expr;
+};
+
+struct NodeBinExpr {
+    Variant<NodeSumExpr*,NodeProdExpr*,NodePowerExpr*,NodeSubExpr*,NodeIntDivExpr*> variant;
 };
 
 
@@ -75,6 +95,10 @@ class Parser {
     Deq<Token> infixToPostfixExpr() {
         Stack<Token> s;
         Deq<Token> postfix;
+        int openParens = 0;
+        int closedParens = 0;
+
+        bool expectOperand {true};
 
         while (peek().has_value()) {
             TokenType type = peek()->type;
@@ -82,21 +106,33 @@ class Parser {
             bool isExprToken = BIN_EXPR_TOKEN_PRIO.contains(type) ||
                                type == TokenType::OPEN_PAREN ||
                                type == TokenType::CLOSED_PAREN ||
+                               type == TokenType::IDENT ||
                                type == TokenType::INT_LITERAL;
 
             if (!isExprToken) {
                 break;
             }
 
-            const Token token = consume();
+            if (type == TokenType::CLOSED_PAREN) {
+                if (closedParens >= openParens
+                    && peek(1).has_value()
+                    && !BIN_EXPR_TOKEN_PRIO.contains(peek(1).value().type))
+                    break;
+                closedParens ++;
+            }
 
-            if (token.type == TokenType::INT_LITERAL) {
+            Token token = consume();
+
+            if (token.type == TokenType::INT_LITERAL || token.type == TokenType::IDENT) {
                 postfix.push_back(token);
+                expectOperand = false;
                 continue;
             }
 
             if (token.type == TokenType::OPEN_PAREN) {
                 s.push(token);
+                openParens ++;
+                expectOperand = true;
                 continue;
             }
 
@@ -108,6 +144,13 @@ class Parser {
                 if (!s.empty()) {
                     s.pop();
                 }
+                expectOperand = false;
+                continue;
+            }
+
+            if (token.type == TokenType::MINUS && expectOperand) {
+                token.type = TokenType::UNARY_MINUS;
+                s.push(token);
                 continue;
             }
 
@@ -119,6 +162,7 @@ class Parser {
                     } else break;
                 }
                 s.push(token);
+                expectOperand = true;
             }
         }
 
@@ -132,56 +176,118 @@ class Parser {
 
 
 
-    Opt<BinExpr*> parseBinaryExp() {
-        if (!peek().has_value() || peek().value().type != TokenType::INT_LITERAL) return {};
+    Opt<NodeExpr*> parseExpr() {
+        if (!peek().has_value()
+            || (peek().value().type != TokenType::INT_LITERAL && peek().value().type != TokenType::IDENT
+                && peek().value().type != TokenType::MINUS && peek(1).has_value() && peek(1).value().type != TokenType::INT_LITERAL && peek(1).value().type != TokenType::IDENT)
+            ) return {};
 
-        const Deq<Token> postfix = infixToPostfixExpr();
+        print("============= Starting Expr =============");
 
-        Stack<Variant<Token,Variant<SumExpr*,ProdExpr*>>> stack;
+        Deq<Token> postfix = infixToPostfixExpr();
+        String vals;
+
+        // print("Postfix: {}", vals.substr(0,vals.length() - 2));
+
+        Stack<NodeExpr*> stack;
 
         while (!postfix.empty()) {
-            const Token& token = postfix.front();
+            vals.clear();
+            for (auto p : postfix) {
+                vals.append(tokenTypeToString(p.type)).append(", ");
+            }
+            print("Postfix: {}", vals.substr(0,vals.length() - 2));
+            const Token token = std::move(postfix.front());
+            postfix.pop_front();
+
             if (token.type == TokenType::INT_LITERAL) {
-                stack.push(token);
+                auto node_expr_int_lit = allocator.allocate<NodeExprIntLit>();
+                node_expr_int_lit->intLit = token;
+                auto expr = allocator.allocate<NodeExpr>();
+                expr->var = node_expr_int_lit;
+                stack.push(expr);
                 continue;
             }
-            Variant<Token,Variant<SumExpr*,ProdExpr*>> left = stack.top();
+            if (token.type == TokenType::IDENT) {
+                auto node_expr_int_lit = allocator.allocate<NodeExprIdent>();
+                node_expr_int_lit->identifier = token;
+                auto expr = allocator.allocate<NodeExpr>();
+                expr->var = node_expr_int_lit;
+                stack.push(expr);
+                continue;
+            }
+
+            const auto right = stack.top();
             stack.pop();
-            Variant<Token,Variant<SumExpr*,ProdExpr*>> right= stack.top();
+
+            if (token.type == TokenType::UNARY_MINUS) {
+                auto expr = allocator.allocate<NodeExpr>();
+                auto negate_expr = allocator.allocate<NodeNegateExpr>();
+                negate_expr->expr = right;
+                expr->var = negate_expr;
+                stack.push(expr);
+                continue;
+            }
+
+
+            const auto left = stack.top();
             stack.pop();
 
-            Variant<SumExpr*,ProdExpr*> variant {};
-            if (token.type == TokenType::SUM) {
-                auto sum = allocator.allocate<SumExpr>();
-                const auto left_expr = allocator.allocate<NodeExpr>();
-                const auto right_expr = allocator.allocate<NodeExpr>();
-                auto left_expr_int_lit = allocator.allocate<NodeExprIntLit>();
-                auto right_expr_int_lit = allocator.allocate<NodeExprIntLit>();
-                left_expr_int_lit->intLit = left;
-                right_expr_int_lit->intLit = right;
-                left_expr->var = left_expr_int_lit;
-                right_expr->var = right_expr_int_lit;
-                sum->left = left_expr;
-                sum->right = right_expr;
-                variant = sum;
+            if (token.type == TokenType::PLUS) {
+                auto sum = allocator.allocate<NodeSumExpr>();
+                sum->left = left;
+                sum->right = right;
 
-                stack.push(sum);
+                auto bin_expr = allocator.allocate<NodeBinExpr>();
+                bin_expr->variant = sum;
+                auto expr = allocator.allocate<NodeExpr>();
+                expr->var = bin_expr;
 
+                stack.push(expr);
+                continue;
+            }
+            if (token.type == TokenType::MINUS) {
+                auto prod_expr = allocator.allocate<NodeSubExpr>();
+                prod_expr->left = left;
+                prod_expr->right = right;
+                auto bin_expr = allocator.allocate<NodeBinExpr>();
+                bin_expr->variant = prod_expr;
+                auto expr = allocator.allocate<NodeExpr>();
+                expr->var = bin_expr;
+                stack.push(expr);
                 continue;
             }
             if (token.type == TokenType::PRODUCT) {
-                auto sum = allocator.allocate<ProdExpr>();
-                const auto left_expr = allocator.allocate<NodeExpr>();
-                const auto right_expr = allocator.allocate<NodeExpr>();
-                auto left_expr_int_lit = allocator.allocate<NodeExprIntLit>();
-                auto right_expr_int_lit = allocator.allocate<NodeExprIntLit>();
-                left_expr_int_lit->intLit = left;
-                right_expr_int_lit->intLit = right;
-                left_expr->var = left_expr_int_lit;
-                right_expr->var = right_expr_int_lit;
-                sum->left = left_expr;
-                sum->right = right_expr;
-                variant = sum;
+                auto prod_expr = allocator.allocate<NodeProdExpr>();
+                prod_expr->left = left;
+                prod_expr->right = right;
+                auto bin_expr = allocator.allocate<NodeBinExpr>();
+                bin_expr->variant = prod_expr;
+                auto expr = allocator.allocate<NodeExpr>();
+                expr->var = bin_expr;
+                stack.push(expr);
+                continue;
+            }
+            if (token.type == TokenType::POWER) {
+                auto prod_expr = allocator.allocate<NodePowerExpr>();
+                prod_expr->left = left;
+                prod_expr->right = right;
+                auto bin_expr = allocator.allocate<NodeBinExpr>();
+                bin_expr->variant = prod_expr;
+                auto expr = allocator.allocate<NodeExpr>();
+                expr->var = bin_expr;
+                stack.push(expr);
+                continue;
+            }
+            if (token.type == TokenType::DIVISION) {
+                auto prod_expr = allocator.allocate<NodeIntDivExpr>();
+                prod_expr->left = left;
+                prod_expr->right = right;
+                auto bin_expr = allocator.allocate<NodeBinExpr>();
+                bin_expr->variant = prod_expr;
+                auto expr = allocator.allocate<NodeExpr>();
+                expr->var = bin_expr;
+                stack.push(expr);
                 continue;
             }
 
@@ -190,28 +296,8 @@ class Parser {
 
         }
 
-    }
-
-    Opt<NodeExpr*> parseExpr() {
-        if (peek().has_value() && peek().value().type == TokenType::INT_LITERAL) {
-            auto node_expr_int_lit = allocator.allocate<NodeExprIntLit>();
-            node_expr_int_lit->intLit = consume();
-
-            auto expr = allocator.allocate<NodeExpr>();
-            expr->var = node_expr_int_lit;
-            return expr;
-        }
-        if (peek().has_value() && peek().value().type == TokenType::IDENT) {
-
-            auto node_expr_ident = allocator.allocate<NodeExprIdent>();
-            node_expr_ident->identifier = consume();
-
-            auto node_expr = allocator.allocate<NodeExpr>();
-            node_expr->var = node_expr_ident;
-
-            return node_expr;
-        }
-        return {};
+        print("============= ENDING Expr =============");
+        return stack.top();
     }
 
 
@@ -264,10 +350,12 @@ public:
                 node = node_stmt;
             } else {
                 print(stderr,"[Error] Let statement invalid expression.");
+                exit(1);
             }
             if (peek().has_value() && peek().value().type == TokenType::SEMI) consume();
             else {
                 print(stderr,"[Error] Let statement without ending ';'");
+                exit(1);
             }
         }
 
