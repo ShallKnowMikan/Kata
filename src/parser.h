@@ -68,8 +68,12 @@ struct NodeStmtLet {
     NodeExpr* expr;
 };
 
+struct NodeStmtPrint {
+    NodeExpr* expr;
+};
+
 struct NodeStmt {
-    Variant<NodeStmtExit*,NodeStmtLet*> val;
+    Variant<NodeStmtExit*,NodeStmtLet*,NodeStmtPrint*> val;
 };
 
 struct NodeProg {
@@ -300,6 +304,97 @@ class Parser {
         return stack.top();
     }
 
+    NodeStmt* parseExitNode() {
+        NodeStmt* node;
+        consume();
+        if (peek().has_value() && peek().value().type == TokenType::OPEN_PAREN)
+            consume();
+        else {
+            print(stderr,"Missing open paren for exit instruction!");
+            exit(1);
+        }
+        if (const auto nodeExpr = parseExpr()) {
+            auto node_stmt = allocator.allocate<NodeStmt>();
+            auto node_stmt_exit = allocator.allocate<NodeStmtExit>();
+            node_stmt_exit->expr = nodeExpr.value();
+            node_stmt->val = node_stmt_exit;
+
+            node = node_stmt;
+        } else {
+            print(stderr,"Invalid expression for exit node!");
+            exit(1);
+        }
+        if (peek().has_value() && peek().value().type == TokenType::CLOSED_PAREN)
+            consume();
+        else {
+            print(stderr,"Missing closed paren for exit instruction!");
+            exit(1);
+        }
+        if (!peek().has_value() || peek().value().type != TokenType::SEMI){
+            print(stderr,"Missing semi column for exit instruction!");
+            exit(1);
+        }
+        consume();
+        return node;
+    }
+
+    NodeStmt* parseLetNode() {
+        NodeStmt* node;
+        consume();
+        auto stmtLet = allocator.allocate<NodeStmtLet>();
+        stmtLet->ident = consume();
+        consume();
+        if (const auto expr = parseExpr()) {
+            stmtLet->expr = expr.value();
+            const auto node_stmt = allocator.allocate<NodeStmt>();
+            node_stmt->val = stmtLet;
+            node = node_stmt;
+        } else {
+            print(stderr,"[Error] Let statement invalid expression.");
+            exit(1);
+        }
+        if (peek().has_value() && peek().value().type == TokenType::SEMI) consume();
+        else {
+            print(stderr,"[Error] Let statement without ending ';'");
+            exit(1);
+        }
+        return node;
+    }
+
+    NodeStmt* parsePrintNode() {
+        NodeStmt* node;
+        consume();
+        if (peek().has_value() && peek().value().type == TokenType::OPEN_PAREN)
+            consume();
+        else {
+            print(stderr,"Missing open paren for print instruction!");
+            exit(1);
+        }
+        if (const auto nodeExpr = parseExpr()) {
+            const auto node_stmt = allocator.allocate<NodeStmt>();
+            auto node_stmt_exit = allocator.allocate<NodeStmtPrint>();
+            node_stmt_exit->expr = nodeExpr.value();
+            node_stmt->val = node_stmt_exit;
+
+            node = node_stmt;
+        } else {
+            print(stderr,"Invalid expression for print node!");
+            exit(1);
+        }
+        if (peek().has_value() && peek().value().type == TokenType::CLOSED_PAREN)
+            consume();
+        else {
+            print(stderr,"Missing closed paren for print instruction!");
+            exit(1);
+        }
+        if (!peek().has_value() || peek().value().type != TokenType::SEMI){
+            print(stderr,"Missing semi column for print instruction!");
+            exit(1);
+        }
+        consume();
+
+        return node;
+    }
 
 public:
     explicit Parser(Vec<Token> source) : tokens(std::move(source)),allocator(1024 * 1024 * 4){}
@@ -307,56 +402,15 @@ public:
     Opt<NodeStmt*> parseStatement() {
         Opt<NodeStmt*> node;
         if (peek().value().type == TokenType::EXIT) {
-            consume();
-            if (peek().has_value() && peek().value().type == TokenType::OPEN_PAREN)
-                consume();
-            else {
-                print(stderr,"Missing open paren for exit instruction!");
-                exit(1);
-            }
-            if (const auto nodeExpr = parseExpr()) {
-                auto node_stmt = allocator.allocate<NodeStmt>();
-                auto node_stmt_exit = allocator.allocate<NodeStmtExit>();
-                node_stmt_exit->expr = nodeExpr.value();
-                node_stmt->val = node_stmt_exit;
-
-                node = node_stmt;
-            } else {
-                print(stderr,"Invalid expression for exit node!");
-                exit(1);
-            }
-            if (peek().has_value() && peek().value().type == TokenType::CLOSED_PAREN)
-                consume();
-            else {
-                print(stderr,"Missing closed paren for exit instruction!");
-                exit(1);
-            }
-            if (!peek().has_value() || peek().value().type != TokenType::SEMI){
-                print(stderr,"Missing semi column for exit instruction!");
-                exit(1);
-            }
-            consume();
+            node = parseExitNode();
         } else if (peek().has_value() && peek().value().type == TokenType::LET
             && peek(2).has_value() && peek(2).value().type == TokenType::EQUALS
             && peek(1).has_value() && peek(1).value().type == TokenType::IDENT) {
-            consume();
-            auto stmtLet = allocator.allocate<NodeStmtLet>();
-            stmtLet->ident = consume();
-            consume();
-            if (const auto expr = parseExpr()) {
-                stmtLet->expr = expr.value();
-                const auto node_stmt = allocator.allocate<NodeStmt>();
-                node_stmt->val = stmtLet;
-                node = node_stmt;
-            } else {
-                print(stderr,"[Error] Let statement invalid expression.");
-                exit(1);
-            }
-            if (peek().has_value() && peek().value().type == TokenType::SEMI) consume();
-            else {
-                print(stderr,"[Error] Let statement without ending ';'");
-                exit(1);
-            }
+
+            node = parseLetNode();
+        } else if (peek().value().type == TokenType::PRINT) {
+            node = parsePrintNode();
+
         }
 
         return node;

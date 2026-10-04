@@ -18,6 +18,7 @@ enum class TokenType {
     DIVISION,
     POWER,
     UNARY_MINUS,
+    PRINT,
 };
 
 
@@ -46,6 +47,7 @@ inline std::string tokenTypeToString(const TokenType type) {
         case TokenType::DIVISION: return "DIVISION";
         case TokenType::POWER: return "POWER";
         case TokenType::UNARY_MINUS: return "UNARY_MINUS";
+        case TokenType::PRINT: return "PRINT";
     };
     return "INVALID TYPE";
 }
@@ -89,6 +91,11 @@ public:
                 }
                 if (buffer == "let") {
                     tokens.push_back({.type = TokenType::LET});
+                    buffer.clear();
+                    continue;
+                }
+                if (buffer == "print") {
+                    tokens.push_back({.type = TokenType::PRINT});
                     buffer.clear();
                     continue;
                 }
