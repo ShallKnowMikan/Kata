@@ -163,7 +163,7 @@ public:
                 gen->generateExpr(printNode->expr);
 
                 gen->pop("rdi");
-                gen->out << "    call print_int\n";
+                gen->out << "    call kata_print_int wrt ..plt\n";
             }
         };
         StmtVisitor visitor(this);
@@ -172,51 +172,23 @@ public:
     }
 
      [[nodiscard]] String generate() {
+        out << "default rel\n";
+        out << "extern kata_print_float\n";
+        out << "extern kata_print_int\n";
         out << "section .text\n";
-        out << "global _start\n_start:\n";
+        out << "global main\nmain:\n";
+        out << "    push rbp\n";
+        out << "    mov rbp, rsp\n";
 
         for (const auto & stmt : root->stmts) {
             generateStmt(stmt);
         }
 
-        out << "    mov rax, 60\n";
-        out << "    mov rdi, 0\n";
-        out << "    syscall";
-
         out << R"(
-print_int:
-    push rbp
-    mov rbp, rsp
-    sub rsp, 32            ; Alloca un buffer di 32 byte sullo stack
-
-    mov rax, rdi           ; Copia il numero da stampare in rax
-    mov rcx, 10            ; Divisore costante = 10
-    lea rsi, [rbp - 1]     ; rsi punta alla fine del buffer
-    mov byte [rsi], 10     ; Aggiungi il newline '\n' alla fine
-
-.print_loop:
-    xor rdx, rdx           ; Azzera rdx prima della divisione
-    div rcx                ; Divide (rdx:rax) per 10. Quoziente in rax, resto in rdx
-    add dl, 48             ; Converte il resto (0-9) nel carattere ASCII ('0'-'9')
-    dec rsi                ; Sposta il puntatore indietro di 1 byte
-    mov [rsi], dl          ; Salva il carattere nel buffer
-
-    cmp rax, 0             ; Se il quoziente non è 0, continua a dividere
-    jnz .print_loop
-
-    ; Ora prepariamo la syscall write
-    mov rax, 1             ; sys_write
-    mov rdi, 1             ; stdout
-    ; rsi punta già all'inizio della stringa appena generata
-
-    ; Calcoliamo la lunghezza della stringa stampata
-    lea rdx, [rbp]
-    sub rdx, rsi           ; lunghezza = rbp (fine) - rsi (inizio)
-
-    syscall
-
-    leave                  ; Ripristina lo stack
-    ret                    ; Torna al programma principale
+    mov eax, 0
+    mov rsp,rbp
+    pop rbp
+    ret
 )";
 
         return out.str();

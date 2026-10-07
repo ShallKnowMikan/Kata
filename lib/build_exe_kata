@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Controllo che sia stato passato il file sorgente
+if [ -z "$1" ]; then
+    echo "Errore: Manca il file sorgente."
+    echo "Uso: $0 <file_test.asm> [nome_output]"
+    exit 1
+fi
+
+SRC_FILE="$1"
+BASENAME="${SRC_FILE%.*}"
+
+# Se il secondo parametro esiste lo usa come output, altrimenti usa il basename
+if [ -n "$2" ]; then
+    OUT_FILE="$2"
+else
+    OUT_FILE="$BASENAME"
+fi
+
+echo "[*] Compilo $SRC_FILE..."
+nasm -felf64 "$SRC_FILE" -o "${BASENAME}.o"
+
+echo "[*] Linko con libkata creando l'eseguibile '$OUT_FILE'..."
+gcc -no-pie "${BASENAME}.o" -L/usr/lib -lkata -o "$OUT_FILE"
+
+echo "[V] Fatto. Puoi eseguirlo con: ./$OUT_FILE"

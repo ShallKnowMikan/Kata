@@ -19,9 +19,17 @@ enum class TokenType {
     POWER,
     UNARY_MINUS,
     PRINT,
+    STRING_TYPE,
+    INT_TYPE,
+    FLOAT_TYPE,
+    TYPE_DEF,
 };
 
-
+inline HashSet native_types = {
+    TokenType::STRING_TYPE,
+    TokenType::INT_TYPE,
+    TokenType::FLOAT_TYPE,
+};
 inline HashMap<TokenType,int> BIN_EXPR_TOKEN_PRIO = {
     {TokenType::PLUS, 0},
     {TokenType::MINUS, 0},
@@ -48,6 +56,10 @@ inline std::string tokenTypeToString(const TokenType type) {
         case TokenType::POWER: return "POWER";
         case TokenType::UNARY_MINUS: return "UNARY_MINUS";
         case TokenType::PRINT: return "PRINT";
+        case TokenType::STRING_TYPE: return "STRING_TYPE";
+        case TokenType::INT_TYPE: return "INT_TYPE";
+        case TokenType::FLOAT_TYPE: return "FLOAT_TYPE";
+        case TokenType::TYPE_DEF: return "TYPE_DEF";
     };
     return "INVALID TYPE";
 }
@@ -99,6 +111,24 @@ public:
                     buffer.clear();
                     continue;
                 }
+                if (buffer == "string") {
+                    tokens.push_back({.type = TokenType::STRING_TYPE});
+                    if (tokens.size() < 2 || tokens.at(tokens.size() - 2).type != TokenType::TYPE_DEF) {
+                        print("[Error] Incorrect type definition, must use ':' before declaring types.");
+                        exit(1);
+                    }
+                    buffer.clear();
+                    continue;
+                }
+                if (buffer == "string" || buffer == "int" || buffer == "float") {
+                    tokens.push_back({.type = TokenType::STRING_TYPE});
+                    if (tokens.size() < 2 || tokens.at(tokens.size() - 2).type != TokenType::TYPE_DEF) {
+                        print("[Error] Incorrect type definition, must use ':' before declaring types.");
+                        exit(1);
+                    }
+                    buffer.clear();
+                    continue;
+                }
                 tokens.push_back({.type = TokenType::IDENT, .value = buffer});
                 buffer.clear();
 
@@ -112,6 +142,14 @@ public:
             } else if (peek().value() == ';') {
                 consume();
                 tokens.push_back({.type = TokenType::SEMI});
+                continue;
+            } else if (peek().value() == ':') {
+                consume();
+                tokens.push_back({.type = TokenType::TYPE_DEF});
+                if (tokens.size() < 2 || tokens.at(tokens.size() - 2).type != TokenType::IDENT) {
+                    print("[Error] Cannot incorrect type definition.");
+                    exit(1);
+                }
                 continue;
             } else if (peek().value() == '(') {
                 consume();
@@ -145,6 +183,11 @@ public:
             } else if (peek().value() == '=') {
                 consume();
                 tokens.push_back({.type = TokenType::EQUALS});
+                if (tokens.size() < 2 || tokens.at(tokens.size() - 2).type != TokenType::IDENT || (tokens.size() >= 3 && tokens.at(tokens.size() - 3).type != TokenType::TYPE_DEF && tokens.at(tokens.size() - 3).type != TokenType::LET  && !native_types.contains(tokens.at(tokens.size() - 2).type))) {
+                    print("[Error] Invalid assignment.");
+                    // let x: string = "";
+                    exit(1);
+                }
                 continue;
             } else if (isspace(peek().value())) {
                 consume();

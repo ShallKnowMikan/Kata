@@ -9,4 +9,6 @@ add_executable(kata src/main.cpp
         src/parser.h
         src/generation.h
         src/sugar.h
-        src/arena.h)
+        src/arena.h
+        src/ast.h
+        src/parser.cpp)

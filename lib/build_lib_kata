@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Controllo che sia stato passato almeno un parametro
+if [ -z "$1" ]; then
+    echo "Errore: Manca il file sorgente."
+    echo "Uso: $0 <file_libreria.asm>"
+    exit 1
+fi
+
+SRC_FILE="$1"
+# Estrae il nome senza l'estensione (es. da libkata.asm ottiene libkata)
+BASENAME="${SRC_FILE%.*}"
+
+echo "[*] Compilo $SRC_FILE..."
+nasm -felf64 "$SRC_FILE" -o "${BASENAME}.o"
+
+echo "[*] Linko la libreria condivisa ${BASENAME}.so..."
+gcc -shared "${BASENAME}.o" -o "${BASENAME}.so"
+
+echo "[*] Copio in /usr/lib (ti chiederà la password)..."
+sudo cp "${BASENAME}.so" /usr/lib/
+
+echo "[V] Libreria aggiornata con successo!"

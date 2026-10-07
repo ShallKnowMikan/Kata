@@ -41,9 +41,9 @@ int main(int argc, char* argv[]) {
 
 		output.close();
 		std::stringstream cmd;
-		cmd << "nasm -felf64 " << fileFullPath << " ; ld.lld "<< filePath + fileName <<".o -o " << filePath + fileName;
+		// cmd << "nasm -felf64 " << fileFullPath << " ; ld.lld "<< filePath + fileName <<".o -o " << filePath + fileName;
 
-		print("Running command: {}",cmd.str());
+		// print("Running command: {}",cmd.str());
 		system(cmd.str().c_str());
 	}
 

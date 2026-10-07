@@ -1,6 +1,11 @@
+default rel
+extern kata_print_float
+extern kata_print_int
 section .text
-global _start
-_start:
+global main
+main:
+    push rbp
+    mov rbp, rsp
     mov rax, 3
     push rax
     mov rax, 2
@@ -56,40 +61,9 @@ _start:
     push [rsp + 0]
 
     pop rdi
-    call print_int
-    mov rax, 60
-    mov rdi, 0
-    syscall
-print_int:
-    push rbp
-    mov rbp, rsp
-    sub rsp, 32            ; Alloca un buffer di 32 byte sullo stack
+    call kata_print_int wrt ..plt
 
-    mov rax, rdi           ; Copia il numero da stampare in rax
-    mov rcx, 10            ; Divisore costante = 10
-    lea rsi, [rbp - 1]     ; rsi punta alla fine del buffer
-    mov byte [rsi], 10     ; Aggiungi il newline '\n' alla fine
-
-.print_loop:
-    xor rdx, rdx           ; Azzera rdx prima della divisione
-    div rcx                ; Divide (rdx:rax) per 10. Quoziente in rax, resto in rdx
-    add dl, 48             ; Converte il resto (0-9) nel carattere ASCII ('0'-'9')
-    dec rsi                ; Sposta il puntatore indietro di 1 byte
-    mov [rsi], dl          ; Salva il carattere nel buffer
-
-    cmp rax, 0             ; Se il quoziente non è 0, continua a dividere
-    jnz .print_loop
-
-    ; Ora prepariamo la syscall write
-    mov rax, 1             ; sys_write
-    mov rdi, 1             ; stdout
-    ; rsi punta già all'inizio della stringa appena generata
-
-    ; Calcoliamo la lunghezza della stringa stampata
-    lea rdx, [rbp]
-    sub rdx, rsi           ; lunghezza = rbp (fine) - rsi (inizio)
-
-    syscall
-
-    leave                  ; Ripristina lo stack
-    ret                    ; Torna al programma principale
+    mov eax, 0
+    mov rsp,rbp
+    pop rbp
+    ret
